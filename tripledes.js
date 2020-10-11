@@ -592,7 +592,9 @@
 	        _doReset: function () {
 	            // Shortcuts
 	            var key = this._key;
-	            var keyWords = key.words;
+				var keyWords = key.words;
+				var cfg = this.cfg;
+				var rounds = cfg.rounds || 16;
 
 	            // Select 56 bits according to PC1
 	            var keyBits = [];
@@ -603,7 +605,7 @@
 
 	            // Assemble 16 subkeys
 	            var subKeys = this._subKeys = [];
-	            for (var nSubKey = 0; nSubKey < 16; nSubKey++) {
+	            for (var nSubKey = 0; nSubKey < rounds; nSubKey++) {
 	                // Create subkey
 	                var subKey = subKeys[nSubKey] = [];
 
@@ -631,20 +633,24 @@
 
 	            // Compute inverse subkeys
 	            var invSubKeys = this._invSubKeys = [];
-	            for (var i = 0; i < 16; i++) {
-	                invSubKeys[i] = subKeys[15 - i];
+	            for (var i = 0; i < rounds; i++) {
+	                invSubKeys[i] = subKeys[rounds - 1 - i];
 	            }
 	        },
 
 	        encryptBlock: function (M, offset) {
-	            this._doCryptBlock(M, offset, this._subKeys);
+				var cfg = this.cfg;
+				var rounds = cfg.rounds || 16;
+	            this._doCryptBlock(M, offset, rounds, this._subKeys);
 	        },
 
 	        decryptBlock: function (M, offset) {
-	            this._doCryptBlock(M, offset, this._invSubKeys);
+				var cfg = this.cfg;
+				var rounds = cfg.rounds || 16;
+	            this._doCryptBlock(M, offset, rounds, this._invSubKeys);
 	        },
 
-	        _doCryptBlock: function (M, offset, subKeys) {
+	        _doCryptBlock: function (M, offset, rounds, subKeys) {
 	            // Get input
 	            this._lBlock = M[offset];
 	            this._rBlock = M[offset + 1];
@@ -657,7 +663,7 @@
 	            exchangeLR.call(this, 1,  0x55555555);
 
 	            // Rounds
-	            for (var round = 0; round < 16; round++) {
+	            for (var round = 0; round < rounds; round++) {
 	                // Shortcuts
 	                var subKey = subKeys[round];
 	                var lBlock = this._lBlock;
